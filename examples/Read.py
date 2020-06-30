@@ -7,7 +7,7 @@ import sys
 from pirc522 import RFID
 
 run = True
-rdr = RFID()
+rdr = RFID(pin_rst = 16, pin_irq=26)
 util = rdr.util()
 util.debug = True
 

@@ -5,9 +5,11 @@ BEAGLEBONE = object()
 board = RASPBERRY
 try:
     # Try with Raspberry PI imports first
-    import spidev
+    import smbus
+    #import spidev
     import RPi.GPIO as GPIO
-    SPIClass = spidev.SpiDev
+    #SPIClass = spidev.SpiDev
+    I2CClass = smbus.SMBus
     def_pin_rst = 22
     def_pin_irq = 18
     def_pin_mode = GPIO.BOARD
@@ -76,13 +78,15 @@ class RFID(object):
         self.pin_ce = pin_ce
         self.pin_irq = pin_irq
 
-        self.spi = SPIClass()
-        self.spi.open(bus, device)
-        if board == RASPBERRY:
-            self.spi.max_speed_hz = speed
-        else:
-            self.spi.mode = 0
-            self.spi.msh = speed
+        #self.spi = SPIClass()
+        self.i2c = I2CClass(1)
+        self.i2c_addr = 0xDD
+        #self.spi.open(bus, device)
+        #if board == RASPBERRY:
+        #    self.spi.max_speed_hz = speed
+        #else:
+        #    self.spi.mode = 0
+        #    self.spi.msh = speed
 
         if pin_mode is not None:
             GPIO.setmode(pin_mode)
@@ -117,10 +121,13 @@ class RFID(object):
         return r
 
     def dev_write(self, address, value):
-        self.spi_transfer([(address << 1) & 0x7E, value])
+        write_byte_data(self.i2c_addr, address, data)
+        #self.spi_transfer([(address << 1) & 0x7E, value])
+        
 
     def dev_read(self, address):
-        return self.spi_transfer([((address << 1) & 0x7E) | 0x80, 0])[1]
+        return self.i2c.read_byte_data(self.i2c_addr, address)
+        #return self.spi_transfer([((address << 1) & 0x7E) | 0x80, 0])[1]
 
     def set_bitmask(self, address, mask):
         current = self.dev_read(address)
